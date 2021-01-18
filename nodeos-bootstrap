@@ -1,0 +1,156 @@
+#!/bin/bash
+
+script_dir=$(dirname $0)
+config_file="$1"
+
+if [[ "${config_file}" =~ ^(-h|--help)$ ]]; then
+  echo "usage: nodeos-bootstrap [-h|--help] [CONFIG_FILE]"
+  exit 0
+fi
+
+if [ -z "${config_file}" ]; then
+  config_file="${script_dir}/nodeos-bootstrap.config.json"
+fi
+
+if [ ! -f "${config_file}" ]; then
+  echo ">>>> [ERROR] Failed to locate ${config_file}"
+  exit 1
+fi
+
+config=$(jq -c '.' "${config_file}")
+
+echo "${config}" | jq
+read -p "[?] Are you sure to bootstrap the eosio cluster with the above config? (Y/n) " confirm
+if [ "${confirm}" != "Y" ]; then
+  exit 0
+fi
+
+cluster_name=$(echo "${config}" | jq -r '.cluster.name')
+cluster_url=$(echo "${config}" | jq -r '.cluster.url')
+wallet_name=$(echo "${config}" | jq -r '.wallet.name')
+wallet_password=$(echo "${config}" | jq -r '.wallet.password')
+contract_path=$(echo "${config}" | jq -r '.contract.path')
+eosio_pub_key=$(echo "${config}" | jq -r '.eosio.public_key')
+producer_pub_key=$(echo "${config}" | jq -r '.producer.public_key')
+producer_accounts=( $(echo "${config}" | jq -r '.producer.accounts[]') )
+
+system_accounts=(
+  eosio.bpay
+  eosio.msig
+  eosio.names
+  eosio.ram
+  eosio.ramfee
+  eosio.saving
+  eosio.stake
+  eosio.token
+  eosio.vpay
+  eosio.rex
+)
+
+cleos wallet unlock -n "${wallet_name}" --password "${wallet_password}"
+
+echo ">>>> [INFO ][${cluster_name}] Starting the cluster..."
+${script_dir}/nodeos-start ${cluster_name}
+if [ "$?" -ne 0 ]; then
+  echo ">>>> [ERROR][${cluster_name}] Failed to start the cluster"
+  exit 1
+fi
+
+echo ">>>> [INFO ][${cluster_name}] Waiting for the cluster to get ready..."
+while true; do
+  cleos -u ${cluster_url} get info &> /dev/null && break
+  sleep 1
+done
+
+echo ">>>> [INFO ][${cluster_name}] Activating the built-in protocol [PREACTIVATE_FEATURE]..."
+result=$(curl -s \
+  -XPOST ${cluster_url}/v1/producer/schedule_protocol_feature_activations \
+  -d '{"protocol_features_to_activate":["0ec7e080177b2c02b278d5088611686b49d739925a92d9bfcacd7fc6b74053bd"]}' \
+  | jq -r '.result')
+if [ "${result}" != "ok" ]; then
+  echo ">>>> [ERROR][${cluster_name}] Failed to activate the protocol"
+  exit 1
+fi
+sleep 2
+
+echo ">>>> [INFO ][${cluster_name}] Deploying the [eosio.boot] contract..."
+cleos -u ${cluster_url} set contract eosio "${contract_path}/eosio.boot"
+if [ "$?" -ne 0 ]; then
+  echo ">>>> [ERROR][${cluster_name}] Failed to deploy the contract"
+  exit 1
+fi
+sleep 2
+
+echo ">>>> [INFO ][${cluster_name}] Activating the built-in protocol [WTMSIG_BLOCK_SIGNATURES]..."
+cleos -u ${cluster_url} push action eosio activate \
+  '["299dcb6af692324b899b39f16d5a530a33062804e41f09dc97e9f156b4476707"]' \
+  -p eosio@active
+if [ "$?" -ne 0 ]; then
+  echo ">>>> [ERROR][${cluster_name}] Failed to activate the protocol"
+  exit 1
+fi
+sleep 2
+
+echo ">>>> [INFO ][${cluster_name}] Deploying the [eosio.bios] contract..."
+cleos -u ${cluster_url} set contract eosio "${contract_path}/eosio.bios"
+if [ "$?" -ne 0 ]; then
+  echo ">>>> [ERROR][${cluster_name}] Failed to deploy the contract"
+  exit 1
+fi
+sleep 2
+
+for ac in "${producer_accounts[@]}"; do
+  echo ">>>> [INFO ][${cluster_name}] Creating the producer account [${ac}]..."
+  cleos -u ${cluster_url} create account eosio ${ac} ${producer_pub_key}
+  if [ "$?" -ne 0 ]; then
+    echo ">>>> [ERROR][${cluster_name}] Failed to create the producer account"
+    exit 1
+  fi
+done
+sleep 2
+
+echo ">>>> [INFO ][${cluster_name}] Updating the producer schedule..."
+schedule=$(echo "${config}" | jq -c --arg key ${producer_pub_key} '{
+  "schedule": (.producer.accounts | map({
+    "producer_name": .,
+    "authority": [
+      "block_signing_authority_v0",
+      {
+        "threshold": 1,
+        "keys": [
+          {
+            "key": $key,
+            "weight": 1
+          }
+        ]
+      }
+    ]
+  }))
+}')
+cleos -u ${cluster_url} push action eosio setprods "${schedule}" -p eosio@active
+if [ "$?" -ne 0 ]; then
+  echo ">>>> [ERROR][${cluster_name}] Failed to update the producer schedule"
+  exit 1
+fi
+sleep 2
+cleos -u ${cluster_url} get schedule
+
+for ac in "${system_accounts[@]}"; do
+  echo ">>>> [INFO ][${cluster_name}] Creating the system account [${ac}]..."
+  cleos -u ${cluster_url} create account eosio ${ac} ${eosio_pub_key}
+  if [ "$?" -ne 0 ]; then
+    echo ">>>> [ERROR][${cluster_name}] Failed to create the system account"
+    exit 1
+  fi
+done
+
+for contract in eosio.token eosio.msig; do
+  echo ">>>> [INFO ][${cluster_name}] Deploying the [${contract}] contract..."
+  cleos -u ${cluster_url} set contract ${contract} "${contract_path}/${contract}"
+  if [ "$?" -ne 0 ]; then
+    echo ">>>> [ERROR][${cluster_name}] Failed to deploy the contract"
+    exit 1
+  fi
+  sleep 2
+done
+

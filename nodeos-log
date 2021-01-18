@@ -1,0 +1,23 @@
+#!/bin/bash
+
+script_dir=$(dirname $0)
+
+cluster_name="$1"
+node_name="$2"
+shift 2
+
+if [ -z "${cluster_name}" ] || [ -z "${node_name}" ]; then
+  echo "usage: nodeos-log <CLUSTER_NAME> <NODE_NAME> [...OPTIONS]"
+  exit 1
+fi
+
+nodeos_home="${script_dir}/clusters/${cluster_name}.${node_name}/nodeos"
+nodeos_log_file="${nodeos_home}/runtime.log"
+
+if [ ! -f "${nodeos_log_file}" ]; then
+  echo "[ERROR]: Failed to locate ${nodeos_log_file}"
+  exit 1
+fi
+
+tail $@ "${nodeos_log_file}"
+

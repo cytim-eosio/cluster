@@ -1,0 +1,23 @@
+{
+  "cluster": {
+    "name": "fruits",
+    "url": "http://127.0.0.1:8888"
+  },
+  "wallet": {
+    "name": "default",
+    "password": "(The long password to unlock your wallet)"
+  },
+  "contract": {
+    "path": "(Absolute path to the eosio.contract repository)"
+  },
+  "eosio": {
+    "public_key": "(The public key to setup all system accounts)"
+  },
+  "producer": {
+    "public_key": "(The public key to setup all producer accounts)",
+    "accounts": [
+      "(The list of producer account names (e.g. apple, orange, etc.))",
+      "..."
+    ]
+  }
+}

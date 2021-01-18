@@ -1,0 +1,30 @@
+#!/bin/bash
+
+script_dir=$(dirname $0)
+
+cluster_name="$1"
+node_name="$2"
+
+if [ -z "${cluster_name}" ] || [ -z "${node_name}" ]; then
+  echo "usage: nodeos-clean <CLUSTER_NAME> <NODE_NAME>"
+  exit 1
+fi
+
+nodeos_home="${script_dir}/clusters/${cluster_name}.${node_name}/nodeos"
+
+nodeos_data_dir="${nodeos_home}/data"
+if [ ! -d "${nodeos_data_dir}" ]; then
+  echo "[ERROR][${cluster_name}/${node_name}] Failed to locate ${nodeos_data_dir}"
+  exit 1
+fi
+rm -rf "${nodeos_data_dir}"
+
+nodeos_log_file="${nodeos_home}/runtime.log"
+if [ ! -f "${nodeos_log_file}" ]; then
+  echo "[ERROR][${cluster_name}/${node_name}] Failed to locate ${nodeos_log_file}"
+  exit 1
+fi
+rm -f "${nodeos_log_file}"
+
+echo "[INFO ][${cluster_name}/${node_name}] Cleaned up successfully"
+
