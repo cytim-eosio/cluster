@@ -4,7 +4,7 @@ realpath() {
   [[ $1 = /* ]] && echo "$1" || echo "$PWD/${1#./}"
 }
 
-script_dir=$(dirname $0)
+script_dir="$(dirname $0)/.."
 
 cluster_name="$1"
 node_name="$2"
@@ -23,7 +23,7 @@ if [ -z "${node_name}" ] || [[ "${node_name}" =~ ^-.* ]]; then
   fi
   for folder in "${folders[@]}"; do
     node_name=${folder#"${cluster_name}."}
-    ${script_dir}/nodeos-start "${cluster_name}" "${node_name}" $@
+    ${script_dir}/bin/nodeos-start "${cluster_name}" "${node_name}" $@
   done
 else
   shift 2

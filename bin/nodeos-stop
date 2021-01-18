@@ -1,6 +1,6 @@
 #!/bin/bash
 
-script_dir=$(dirname $0)
+script_dir="$(dirname $0)/.."
 
 cluster_name="$1"
 node_name="$2"
@@ -18,7 +18,7 @@ if [ -z "${node_name}" ]; then
   fi
   for folder in "${folders[@]}"; do
     node_name=${folder#"${cluster_name}."}
-    ${script_dir}/nodeos-stop "${cluster_name}" "${node_name}"
+    ${script_dir}/bin/nodeos-stop "${cluster_name}" "${node_name}"
   done
 else
   nodeos_home="${script_dir}/clusters/${cluster_name}.${node_name}/nodeos"

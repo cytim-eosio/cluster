@@ -34,9 +34,9 @@
 3. If you want to change the initial state of the blockchain, update
    `clusters/<CLUSTER_NAME>.<NODE_NAME>/nodeos/config/genesis.ini` for all of the nodes.
 
-4. Copy `nodeos-bootstrap.config-template.json` to `nodeos-bootstrap.config.json`, and edit the configuration.
+4. Copy `bootstrap/templates/nodeos.json` to `bootstrap/nodeos.json`, and edit the configuration.
 
-5. Run `./nodeos-bootstrap` to bootstrap the cluster. The bootstrap command will do the following...
+5. Run `./bin/nodeos-bootstrap` to bootstrap the cluster. The bootstrap command will do the following...
 
    1. Start the cluster.
 
@@ -52,14 +52,14 @@
 
    7. Deploy the system contracts.
 
-6. Run `./nodeos-log <CLUSTER_NAME> <NODE_NAME> -f` to follow the logs for a particular node.
+6. Run `./bin/nodeos-log <CLUSTER_NAME> <NODE_NAME> -f` to follow the logs for a particular node.
 
 7. Run `cleos -u <CLUSTER_URL> get info` to get the blockchain information.
 
 8. Optionally, you can add the repository to your `PATH` variable so you can run the executables anywhere.
 
    ```sh
-   export PATH=/PATH/TO/eosio-clusters:$PATH
+   export PATH=/path/to/eosio-clusters/bin:$PATH
    ```
 
 ## Manage An Existing Cluster

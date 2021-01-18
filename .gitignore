@@ -89,6 +89,6 @@ $RECYCLE.BIN/
 *.lnk
 
 ### EOSIO ###
-nodeos-bootstrap.config.json
+bootstrap/*.json
 clusters
 
