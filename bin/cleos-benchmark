@@ -1,0 +1,65 @@
+#!/bin/bash
+
+cluster_rpc_endpoint="$1"
+
+if [ -z "${cluster_rpc_endpoint}" ]; then
+  echo "usage: nodeos-benchmark <CLUSTER_RPC_ENDPOINT>"
+  exit 1
+fi
+
+run=0
+tps_arr_15=( 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 )
+apt_arr_15=( 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 )
+idx_15=0
+sum_tps_15=0
+sum_apt_15=0
+max_abs_tps=0
+max_abs_apt=0
+max_avg_tps=0
+max_avg_apt=0
+
+while true; do
+  run=$(( run + 1 ))
+  head_block_id=$(cleos -u "${cluster_rpc_endpoint}" get info | jq -r '.head_block_num')
+  block_details=$(cleos -u "${cluster_rpc_endpoint}" get block ${head_block_id} | jq -c '.')
+  txn_count=$(echo "${block_details}" | jq -r '.transactions | length')
+  act_count=$(echo "${block_details}" | jq -r '(.transactions | map(.trx.transaction.actions | length) | add) // 0')
+  tps=$(( txn_count * 2 ))
+  apt=$(python -c "print(0 if ${txn_count} == 0 else int(round( ${act_count} * 1.0 / ${txn_count} )))")
+  sum_tps_15=$(( sum_tps_15 - tps_arr_15[idx_15] + tps ))
+  sum_apt_15=$(( sum_apt_15 - apt_arr_15[idx_15] + apt ))
+  tps_arr_15[idx_15]=${tps}
+  apt_arr_15[idx_15]=${apt}
+  avg_tps_15=$(python -c "print(round(${sum_tps_15} * 1.0 / 15, 1))")
+  avg_apt_15=$(python -c "print(round(${sum_apt_15} * 1.0 / 15, 1))")
+  if [ "${tps}" -gt "${max_abs_tps}" ]; then
+    max_abs_tps=${tps}
+  fi
+  if [ "${apt}" -gt "${max_abs_apt}" ]; then
+    max_abs_apt=${apt}
+  fi
+  if (( $(echo "${avg_tps_15} > ${max_avg_tps}" | bc -l) )); then
+    max_avg_tps=${avg_tps_15}
+  fi
+  if (( $(echo "${avg_apt_15} > ${max_avg_apt}" | bc -l) )); then
+    max_avg_apt=${avg_apt_15}
+  fi
+
+  jq -ncM "{
+    \"run\": ${run},
+    \"tps\": {
+      \"max_abs\": ${max_abs_tps},
+      \"max_avg\": ${max_avg_tps},
+      \"avg\": ${avg_tps_15}
+    },
+    \"apt\":{
+      \"max_abs\": ${max_abs_apt},
+      \"max_avg\": ${max_avg_apt},
+      \"avg\": ${avg_apt_15}
+    }
+  }"
+
+  idx_15=$(( (idx_15 + 1) % 15 ))
+  sleep 1
+done
+

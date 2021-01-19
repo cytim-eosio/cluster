@@ -1,0 +1,31 @@
+#!/bin/bash
+
+set -e
+
+rounds="$1"
+shift
+
+now() {
+  python -c 'from time import time; print(int(time() * 1000))'
+}
+
+
+echo "Preparing to benchmark the following command..."
+echo "$ cleos $@"
+echo "###########################################################"
+echo "It might take a while. Relax! ☕"
+sleep 3
+
+start=$(now)
+for (( i=0; i<${rounds}; i++ )); do
+  cleos "$@"
+done
+end=$(now)
+
+duration_ms=$(( end - start ))
+requests_per_sec=$(python -c "print(1.0 * ${rounds} / (( ${duration_ms} ) / 1000.0))")
+echo "###########################################################"
+echo "Executed ${rounds} requests in ${duration_ms}ms"
+echo "Requests per sec: ${requests_per_sec}"
+echo "Requests per min: $(python -c "print(60.0 * ${requests_per_sec})")"
+
