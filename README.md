@@ -66,12 +66,15 @@
 
 You can run the following commands to manage the cluster. Running the command without any argument will print the usage.
 
-| Name           | Description |
-|----------------|-------------|
-| `nodeos-start` | Start the whole cluster or one of the nodes. |
-| `nodeos-stop`  | Stop the whole cluster or one of the nodes. |
-| `nodeos-clean` | Clean up the data and logs for the target node. |
-| `nodeos-log`   | Print the logs for the target node. | 
+| Name              | Description |
+|-------------------|-------------|
+| `cleos-benchmark` | Print the blockchain benchmark statistics. |
+| `cleos-load-test` | Repeat the cleos command to load cluster. |
+| `nodeos-ps`       | List the nodes and their status. |
+| `nodeos-start`    | Start the whole cluster or one of the nodes. |
+| `nodeos-stop`     | Stop the whole cluster or one of the nodes. |
+| `nodeos-clean`    | Clean up the data and logs for the target node. |
+| `nodeos-log`      | Print the logs for the target node. | 
 
 ## References
 
