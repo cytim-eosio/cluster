@@ -1,6 +1,6 @@
-# EOSIO Cluster
+# EOSIO: Clusters
 
-> This repo contains the script to bootstrap and manage the EOSIO cluster on Mac.
+> This repo contains the scripts to bootstrap and manage the EOSIO clusters on Mac.
 
 ## IMPORTANT NOTES
 
@@ -11,11 +11,25 @@
 
 ## Prerequisite
 
-1. Install [eosio](https://github.com/eosio/eos).
+1. Install [Node.js](https://nodejs.org/).
 
-2. Install [eosio.cdt](https://github.com/eosio/eosio.cdt).
+2. Install [eosio](https://github.com/eosio/eos).
 
-3. Prepare [eosio.contracts](https://github.com/eosio/eosio.contracts).
+3. Install [eosio.cdt](https://github.com/eosio/eosio.cdt).
+
+4. Prepare [eosio.contracts](https://github.com/eosio/eosio.contracts).
+
+## Installation
+
+1. Clone the repository.
+
+2. Run `./install`.
+
+3. Optionally, add the repository to your `PATH` variable so you can run the executables anywhere.
+
+   ```sh
+   export PATH=/path/to/eosio-clusters/bin:$PATH
+   ```
 
 ## Bootstrap A New Cluster
 
@@ -56,20 +70,14 @@
 
 7. Run `cleos -u <CLUSTER_URL> get info` to get the blockchain information.
 
-8. Optionally, you can add the repository to your `PATH` variable so you can run the executables anywhere.
-
-   ```sh
-   export PATH=/path/to/eosio-clusters/bin:$PATH
-   ```
-
 ## Manage An Existing Cluster
 
 You can run the following commands to manage the cluster. Running the command without any argument will print the usage.
 
 | Name              | Description |
 |-------------------|-------------|
-| `cleos-benchmark` | Print the blockchain benchmark statistics. |
 | `cleos-load-test` | Repeat the cleos command to load cluster. |
+| `nodeos-stats`    | Print the blockchain statistics. |
 | `nodeos-ps`       | List the nodes and their status. |
 | `nodeos-start`    | Start the whole cluster or one of the nodes. |
 | `nodeos-stop`     | Stop the whole cluster or one of the nodes. |

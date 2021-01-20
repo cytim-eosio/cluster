@@ -1,0 +1,13 @@
+#!/bin/bash
+
+SCRIPT_DIR=$(dirname $0)
+
+pushd ${SCRIPT_DIR} > /dev/null
+services_dir=( $(find ./lib -name package.json -maxdepth 2 -print0 | xargs -0 -n1 dirname) )
+
+for dir in "${services_dir[@]}"; do
+  echo "Installing Node.js modules in [$dir]..."
+  npm --prefix "$dir" install
+done
+
+popd > /dev/null
