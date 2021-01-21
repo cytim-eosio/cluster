@@ -321,3 +321,7 @@ $RECYCLE.BIN/
 ### EOSIO ###
 bootstrap/*.json
 clusters
+filebeat/data
+filebeat/logs
+filebeat/*.yml
+!filebeat/filebeat.template.yml

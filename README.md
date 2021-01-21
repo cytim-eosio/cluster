@@ -84,6 +84,28 @@ You can run the following commands to manage the cluster. Running the command wi
 | `nodeos-clean`    | Clean up the data and logs for the target node. |
 | `nodeos-log`      | Print the logs for the target node. | 
 
+## Visualizing the nodeos-stats
+
+If you have a running Elasticsearch and Kibana, you can visualize the `nodeos-stats` logs by transferring the logs to
+Elasticsearch through Filebeat.
+
+1. Run `nodeos-stats` and redirect the output to a log file. For example:
+
+    ```sh
+    nodeos-stats http://127.0.0.1:8888 > logs/nodeos-stats.log
+    ```
+
+2. Copy `filebeat/filebeat.template.yml` to `filebeat/filebeat.yml`, and edit the configuration.
+
+3. Run filebeat to transfer the logs.
+
+    ```sh
+    cd filebeat/
+    filebeat -c filebeat.yml -e
+    ```
+
+4. Visualize the logs on Kibana.
+
 ## References
 
 ### Example Folder Structure for A Running Node

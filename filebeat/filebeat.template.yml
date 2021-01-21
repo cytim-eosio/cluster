@@ -1,0 +1,28 @@
+filebeat.inputs:
+  - type: log
+    enabled: true
+    paths:
+      - /path/to/nodeos/stats.log
+
+processors:
+  - decode_json_fields:
+      fields: ["message"]
+      max_depth: 1
+      target: "details"
+  - timestamp:
+      field: "details.time"
+      layouts:
+        - '2006-01-02T15:04:05.999Z'
+      test:
+        - '2019-11-18T04:59:51.123Z'
+  - drop_fields:
+      fields: ["message", "details.time"]
+
+setup.template.settings:
+  index.number_of_shards: 1
+setup.kibana:
+  host: "localhost:5601"
+
+output.elasticsearch:
+  hosts: ["localhost:9200"]
+
