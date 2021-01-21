@@ -33,6 +33,10 @@ contract_path=$(echo "${config}" | jq -r '.contract.path')
 eosio_pub_key=$(echo "${config}" | jq -r '.eosio.public_key')
 producer_pub_key=$(echo "${config}" | jq -r '.producer.public_key')
 producer_accounts=( $(echo "${config}" | jq -r '.producer.accounts[]') )
+user_pub_key=$(echo "${config}" | jq -r '.user.public_key')
+user_accounts=( $(echo "${config}" | jq -r '.user.accounts[]') )
+token_amount=$(echo "${config}" | jq -r '.token.amount')
+token_issuer=$(echo "${config}" | jq -r '.token.issuer')
 
 system_accounts=(
   eosio.bpay
@@ -99,6 +103,25 @@ if [ "$?" -ne 0 ]; then
 fi
 sleep 2
 
+for ac in "${system_accounts[@]}"; do
+  echo ">>>> [INFO ][${cluster_name}] Creating the system account [${ac}]..."
+  cleos -u ${cluster_url} create account eosio ${ac} ${eosio_pub_key}
+  if [ "$?" -ne 0 ]; then
+    echo ">>>> [ERROR][${cluster_name}] Failed to create the system account"
+    exit 1
+  fi
+done
+
+for contract in eosio.token eosio.msig; do
+  echo ">>>> [INFO ][${cluster_name}] Deploying the [${contract}] contract..."
+  cleos -u ${cluster_url} set contract ${contract} "${contract_path}/${contract}"
+  if [ "$?" -ne 0 ]; then
+    echo ">>>> [ERROR][${cluster_name}] Failed to deploy the contract"
+    exit 1
+  fi
+  sleep 2
+done
+
 for ac in "${producer_accounts[@]}"; do
   echo ">>>> [INFO ][${cluster_name}] Creating the producer account [${ac}]..."
   cleos -u ${cluster_url} create account eosio ${ac} ${producer_pub_key}
@@ -135,22 +158,32 @@ fi
 sleep 2
 cleos -u ${cluster_url} get schedule
 
-for ac in "${system_accounts[@]}"; do
-  echo ">>>> [INFO ][${cluster_name}] Creating the system account [${ac}]..."
-  cleos -u ${cluster_url} create account eosio ${ac} ${eosio_pub_key}
+for ac in "${user_accounts[@]}"; do
+  echo ">>>> [INFO ][${cluster_name}] Creating the user account [${ac}]..."
+  cleos -u ${cluster_url} create account eosio ${ac} ${user_pub_key}
   if [ "$?" -ne 0 ]; then
-    echo ">>>> [ERROR][${cluster_name}] Failed to create the system account"
+    echo ">>>> [ERROR][${cluster_name}] Failed to create the user account"
     exit 1
   fi
 done
+sleep 2
 
-for contract in eosio.token eosio.msig; do
-  echo ">>>> [INFO ][${cluster_name}] Deploying the [${contract}] contract..."
-  cleos -u ${cluster_url} set contract ${contract} "${contract_path}/${contract}"
-  if [ "$?" -ne 0 ]; then
-    echo ">>>> [ERROR][${cluster_name}] Failed to deploy the contract"
-    exit 1
-  fi
-  sleep 2
-done
+echo ">>>> [INFO ][${cluster_name}] Issuing the very first token..."
+cleos -u ${cluster_url} push action eosio.token create "[\"${token_issuer}\", \"${token_amount}\"]" -p eosio.token@active
+cleos -u ${cluster_url} push action eosio.token issue "[\"${token_issuer}\", \"${token_amount}\", \"BE RICH!\"]" -p ${token_issuer}@active
+if [ "$?" -ne 0 ]; then
+  echo ">>>> [ERROR][${cluster_name}] Failed to issue the very first token"
+  exit 1
+fi
 
+cat << EOF
+
+_/////        _////     _///     _//_////////
+_//   _//   _//    _//  _/ _//   _//_//
+_//    _//_//        _//_// _//  _//_//
+_//    _//_//        _//_//  _// _//_//////
+_//    _//_//        _//_//   _/ _//_//
+_//   _//   _//     _// _//    _/ //_//
+_/////        _////     _//      _//_////////
+
+EOF

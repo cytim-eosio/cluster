@@ -16,8 +16,19 @@
   "producer": {
     "public_key": "(The public key to setup all producer accounts)",
     "accounts": [
-      "(The list of producer account names (e.g. apple, orange, etc.))",
+      "(The list of producer account names (e.g. apple, banana, etc.))",
       "..."
     ]
+  },
+  "user": {
+    "public_key": "(The public key to setup all producer accounts)",
+    "accounts": [
+      "(The list of initial user account names (e.g. alice, bob, etc.))",
+      "..."
+    ]
+  },
+  "token": {
+    "amount": "<VALUE> <UNIT>",
+    "issuer": "<ACCOUNT_NAME>"
   }
 }
