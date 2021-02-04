@@ -319,7 +319,8 @@ $RECYCLE.BIN/
 # End of https://www.toptal.com/developers/gitignore/api/linux,osx,windows,vim,visualstudiocode,intellij,node
 
 ### EOSIO ###
-bootstrap/*.json
+bootstrap/
+!bootstrap/templates
 clusters
 filebeat/data
 filebeat/logs
