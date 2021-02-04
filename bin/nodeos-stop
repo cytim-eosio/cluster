@@ -1,6 +1,10 @@
 #!/bin/bash
 
-script_dir="$(dirname $0)/.."
+script_root=$(node -e "
+  const { realpathSync } = require('fs');
+  const { resolve } = require('path');
+  console.log(realpathSync('$(dirname $0)/..'));
+")
 
 cluster_name="$1"
 node_name="$2"
@@ -11,17 +15,17 @@ if [ -z "${cluster_name}" ]; then
 fi
 
 if [ -z "${node_name}" ]; then
-  folders=( $(ls -1 "${script_dir}/clusters" | egrep "^${cluster_name}\.") )
+  folders=( $(ls -1 "${script_root}/clusters" | egrep "^${cluster_name}\.") )
   if [ "${#folders[@]}" -eq 0 ]; then
     echo "[ERROR][${cluster_name}] The cluster does not exist"
     exit 1
   fi
   for folder in "${folders[@]}"; do
     node_name=${folder#"${cluster_name}."}
-    ${script_dir}/bin/nodeos-stop "${cluster_name}" "${node_name}"
+    ${script_root}/bin/nodeos-stop "${cluster_name}" "${node_name}"
   done
 else
-  nodeos_home="${script_dir}/clusters/${cluster_name}.${node_name}/nodeos"
+  nodeos_home="${script_root}/clusters/${cluster_name}.${node_name}/nodeos"
   nodeos_pid_file="${nodeos_home}/runtime.pid"
 
   if [ ! -f "${nodeos_pid_file}" ]; then

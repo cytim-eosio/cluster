@@ -1,6 +1,10 @@
 #!/bin/bash
 
-script_dir="$(dirname $0)/.."
+script_root=$(node -e "
+  const { realpathSync } = require('fs');
+  const { resolve } = require('path');
+  console.log(realpathSync('$(dirname $0)/..'));
+")
 
 cluster_name="$1"
 node_name="$2"
@@ -11,7 +15,7 @@ if [ -z "${cluster_name}" ] || [ -z "${node_name}" ]; then
   exit 1
 fi
 
-nodeos_home="${script_dir}/clusters/${cluster_name}.${node_name}/nodeos"
+nodeos_home="${script_root}/clusters/${cluster_name}.${node_name}/nodeos"
 nodeos_log_file="${nodeos_home}/runtime.log"
 
 if [ ! -f "${nodeos_log_file}" ]; then

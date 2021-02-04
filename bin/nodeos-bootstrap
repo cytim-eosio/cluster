@@ -1,6 +1,11 @@
 #!/bin/bash
 
-script_dir="$(dirname $0)/.."
+script_root=$(node -e "
+  const { realpathSync } = require('fs');
+  const { resolve } = require('path');
+  console.log(realpathSync('$(dirname $0)/..'));
+")
+
 config_file="$1"
 
 if [[ "${config_file}" =~ ^(-h|--help)$ ]]; then
@@ -9,7 +14,7 @@ if [[ "${config_file}" =~ ^(-h|--help)$ ]]; then
 fi
 
 if [ -z "${config_file}" ]; then
-  config_file="${script_dir}/bootstrap/nodeos.json"
+  config_file="${script_root}/bootstrap/nodeos.json"
 fi
 
 if [ ! -f "${config_file}" ]; then
@@ -27,6 +32,7 @@ fi
 
 cluster_name=$(echo "${config}" | jq -r '.cluster.name')
 cluster_url=$(echo "${config}" | jq -r '.cluster.url')
+cluster_nodeos_args=$(echo "${config}" | jq -r '.cluster.nodeos.args')
 wallet_name=$(echo "${config}" | jq -r '.wallet.name')
 wallet_password=$(echo "${config}" | jq -r '.wallet.password')
 contract_path=$(echo "${config}" | jq -r '.contract.path')
@@ -54,7 +60,7 @@ system_accounts=(
 cleos wallet unlock -n "${wallet_name}" --password "${wallet_password}"
 
 echo ">>>> [INFO ][${cluster_name}] Starting the cluster..."
-${script_dir}/bin/nodeos-start ${cluster_name}
+${script_root}/bin/nodeos-start ${cluster_name} ${cluster_nodeos_args}
 if [ "$?" -ne 0 ]; then
   echo ">>>> [ERROR][${cluster_name}] Failed to start the cluster"
   exit 1
