@@ -32,7 +32,7 @@ fi
 
 cluster_name=$(echo "${config}" | jq -r '.cluster.name')
 cluster_url=$(echo "${config}" | jq -r '.cluster.url')
-cluster_nodeos_args=$(echo "${config}" | jq -r '.cluster.nodeos.args')
+cluster_nodeos_args=$(echo "${config}" | jq -r '.cluster.nodeos.args // ""')
 wallet_name=$(echo "${config}" | jq -r '.wallet.name')
 wallet_password=$(echo "${config}" | jq -r '.wallet.password')
 contract_path=$(echo "${config}" | jq -r '.contract.path')
